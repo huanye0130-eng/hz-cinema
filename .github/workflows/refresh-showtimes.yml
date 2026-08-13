@@ -1,0 +1,32 @@
+name: refresh-showtimes
+
+on:
+  schedule:
+    # 每天 05:30 北京时间（UTC 21:30）自动抓取排片并重新发布
+    - cron: '30 21 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scrape showtimes from Maoyan
+        run: python3 collect_showtimes.py
+      - name: Build static site
+        run: python3 build_static.py
+      - name: Copy dist to repo root
+        run: cp dist/index.html index.html
+      - name: Commit and push
+        run: |
+          git config user.name "hz-cinema-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add index.html data/showtimes.json
+          git commit -m "auto: refresh showtimes $(date -u +%F)" || echo "no changes"
+          git push

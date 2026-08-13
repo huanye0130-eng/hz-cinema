@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>杭州影院配置查询工具</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-main">
+      <div>
+        <h1>杭州影院查询</h1>
+        <p id="meta">加载中...</p>
+      </div>
+      <div class="search">
+        <input id="search" type="search" placeholder="搜索影院或地址">
+      </div>
+    </div>
+    <div class="mode-tabs" role="tablist">
+      <button id="modeCinemas" class="mode-tab active" type="button" role="tab">影院总览</button>
+      <button id="modeMovies" class="mode-tab" type="button" role="tab">电影选场</button>
+    </div>
+    <div class="overview-bar" id="overviewBar" aria-label="数据总览">
+      <div class="overview-stats">
+        <span><strong id="totalCinemas">-</strong>影院</span>
+        <span><strong id="totalHalls">-</strong>影厅</span>
+        <span><strong id="totalDistricts">-</strong>区县</span>
+      </div>
+      <div id="quickFilters" class="quick-filters" aria-label="快捷特殊厅筛选"></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="cinemaView" class="layout">
+      <aside class="filters">
+        <section>
+          <h2>行政区</h2>
+          <div id="districts" class="chips"></div>
+        </section>
+        <section>
+          <h2>特殊厅类型</h2>
+          <div id="specialTypes" class="chips"></div>
+        </section>
+        <section>
+          <h2>特殊厅区别</h2>
+          <div class="hall-guide">
+            <p><b class="tg imax">IMAX激光</b>IMAX 激光版，银幕最大（20m+宽）、专属画幅、亮度对比度最强。<b>特效大片首选</b></p>
+            <p><b class="tg imax">IMAX</b>同样大银幕+专属画幅，老式氙灯光源，亮度一般</p>
+            <p><b class="tg dolby">杜比影院</b>杜比视界HDR+全景声，对比度100万:1，画质音效顶级，银幕比IMAX小。<b>画质党首选</b></p>
+            <p><b class="tg cinity">CINITY</b>中影研发：4K/3D/120帧高帧率+高亮度，适合高帧率动作片</p>
+            <p><b class="tg laser">激光巨幕</b>国产大银幕+激光投影，亮度好、性价比高，无专属画幅</p>
+            <p><b class="tg">杜比全景声</b>只升级音效（沉浸环绕），银幕普通，剧情片足够</p>
+            <p><b class="tg">LUXE</b>RealD 终极银幕，亮度均匀，3D 亮度好</p>
+            <p><b class="tg">4DX</b>动感座椅+风/水/气味特效，重在体验，画质普通</p>
+            <p><b class="tg">标准/激光厅</b>常规观影，激光厅画质更亮</p>
+            <p class="guide-tip">选片逻辑：特效大片 IMAX激光 &gt; 杜比影院 &gt; IMAX &gt; CINITY &gt; 激光巨幕；剧情片选杜比影院或就近即可</p>
+          </div>
+        </section>
+        <section>
+          <h2>汇总</h2>
+          <div id="summary" class="summary"></div>
+        </section>
+      </aside>
+
+      <section class="results">
+        <div class="list-header">
+          <strong id="count">0 家影院</strong>
+          <button id="reset" type="button">重置筛选</button>
+        </div>
+        <div id="cinemas" class="cinemas"></div>
+      </section>
+
+      <section class="detail" aria-live="polite">
+        <div id="detailEmpty" class="empty">选择一家影院查看逐厅配置</div>
+        <div id="detailContent" hidden>
+          <div class="detail-head">
+            <div>
+              <h2 id="detailName"></h2>
+              <p id="detailAddress"></p>
+            </div>
+            <span id="detailSource"></span>
+          </div>
+          <div id="halls" class="halls"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="movieView" class="movie-view" hidden>
+      <section class="movie-controls">
+        <div class="movie-block">
+          <h2>选电影</h2>
+          <div id="movieChips" class="chips movie-chips"></div>
+        </div>
+        <div class="movie-block">
+          <h2>选日期</h2>
+          <div id="dateChips" class="chips"></div>
+        </div>
+        <details class="hall-guide-details">
+          <summary>特殊厅有什么区别？</summary>
+          <div class="hall-guide">
+            <p><b class="tg imax">IMAX激光</b>IMAX 激光版，银幕最大（20m+宽）、专属画幅、亮度对比度最强。<b>特效大片首选</b></p>
+            <p><b class="tg imax">IMAX</b>同样大银幕+专属画幅，老式氙灯光源，亮度一般</p>
+            <p><b class="tg dolby">杜比影院</b>杜比视界HDR+全景声，对比度100万:1，画质音效顶级，银幕比IMAX小。<b>画质党首选</b></p>
+            <p><b class="tg cinity">CINITY</b>中影研发：4K/3D/120帧高帧率+高亮度，适合高帧率动作片</p>
+            <p><b class="tg laser">激光巨幕</b>国产大银幕+激光投影，亮度好、性价比高，无专属画幅</p>
+            <p><b class="tg">杜比全景声</b>只升级音效（沉浸环绕），银幕普通，剧情片足够</p>
+            <p><b class="tg">LUXE</b>RealD 终极银幕，亮度均匀，3D 亮度好</p>
+            <p><b class="tg">4DX</b>动感座椅+风/水/气味特效，重在体验，画质普通</p>
+            <p><b class="tg">标准/激光厅</b>常规观影，激光厅画质更亮</p>
+            <p class="guide-tip">选片逻辑：特效大片 IMAX激光 &gt; 杜比影院 &gt; IMAX &gt; CINITY &gt; 激光巨幕；剧情片选杜比影院或就近即可</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="movie-results">
+        <div class="list-header">
+          <strong id="movieCount">-</strong>
+          <button id="specialOnly" type="button">只看特殊厅</button>
+        </div>
+        <div id="movieCinemas" class="movie-cinemas"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
