@@ -190,7 +190,9 @@ def main():
     )
 
     showtimes = build_showtimes()
+    import datetime as _dt
     precomputed = {
+        "buildTime": _dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "districts": district_list,
         "specialTypes": special_list,
         "summary": build_summary(cinemas),
@@ -270,6 +272,11 @@ async function getJson(url) {{
         )
 
     static_js = shim + "\n" + js
+    build_time = precomputed["buildTime"]
+    html = html.replace(
+        '<span id="buildStamp" title="构建时间">—</span>',
+        f'<span id="buildStamp" title="构建时间">构建 {build_time}</span>',
+    )
     out_html = (
         html.replace('<link rel="stylesheet" href="/styles.css">', f"<style>\n{css}\n</style>")
         .replace('<script src="/app.js"></script>', f"<script>\n{static_js}\n</script>")
