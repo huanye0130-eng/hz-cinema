@@ -795,6 +795,13 @@ input:focus-visible {
   font-size: 13px;
   background: var(--panel-soft);
   color: var(--ink);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.session:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .session strong {
@@ -810,6 +817,12 @@ input:focus-visible {
 .session.dolby { background: #fde8e5; }
 .session.cinity { background: #ddf7fb; }
 .session.laser { background: #fff5da; }
+
+.hall-highlight {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-soft) inset;
+  background: color-mix(in srgb, var(--accent-soft) 30%, var(--panel));
+}
 
 @media (prefers-color-scheme: dark) {
   .session.imax { background: #182844; }

@@ -51,6 +51,7 @@ function chip(label, value, active, onClick) {
   button.className = `chip${active ? " active" : ""}`;
   button.textContent = label;
   button.type = "button";
+  button.dataset.value = value;
   button.addEventListener("click", () => onClick(value));
   return button;
 }
@@ -216,6 +217,15 @@ async function loadCinemas() {
   }
 }
 
+function hallNameMatches(hallName, target) {
+  if (!target) return false;
+  if (hallName === target) return true;
+  const a = (hallName || "").replace(/\s+/g, "");
+  const b = (target || "").replace(/\s+/g, "");
+  if (a && b && (a.includes(b) || b.includes(a))) return true;
+  return false;
+}
+
 async function loadDetail(id, options = {}) {
   const requestId = ++state.detailRequestId;
   const payload = await getJson(`/api/cinemas/${id}`);
@@ -246,9 +256,16 @@ async function loadDetail(id, options = {}) {
       </div>
       <p class="meta">来源：${hall.source_detail}</p>
     `;
+    if (options.highlightHall && hallNameMatches(hall.hall_name, options.highlightHall)) {
+      node.classList.add("hall-highlight");
+    }
     return node;
   });
   els.halls.replaceChildren(...halls);
+  if (options.highlightHall) {
+    const target = els.halls.querySelector(".hall-highlight");
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   if (options.scrollIntoView && window.matchMedia("(max-width: 720px)").matches) {
     els.detailContent.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -283,14 +300,15 @@ function dateLabel(dateStr) {
   return `${week} ${md}`;
 }
 
-function sessionChip(session, hallSpec) {
+function sessionChip(session, hallSpec, cinemaName) {
   const [tm, hall, tp, lang, price] = session;
   const spec = hallSpec[hall] || "";
   const specClass = specialClassName(spec);
   const span = document.createElement("span");
   span.className = `session${specClass ? ` ${specClass}` : ""}`;
-  span.title = `${hall} · ${tp}${lang ? " " + lang : ""}${price ? " · ¥" + price : ""}${spec ? " · " + spec : ""}`;
+  span.title = `${hall} · ${tp}${lang ? " " + lang : ""}${price ? " · ¥" + price : ""}${spec ? " · " + spec : ""}（点击查看该影厅数据）`;
   span.innerHTML = `<strong>${tm}</strong>${hall}${price ? `<b>¥${price}</b>` : ""}`;
+  span.addEventListener("click", () => jumpToCinema(cinemaName, hall));
   return span;
 }
 
@@ -337,7 +355,7 @@ function renderMovieCinemas() {
     `;
     const sessionRow = document.createElement("div");
     sessionRow.className = "sessions";
-    sessions.forEach((s) => sessionRow.appendChild(sessionChip(s, c.hs || {})));
+    sessions.forEach((s) => sessionRow.appendChild(sessionChip(s, c.hs || {}, c.n)));
     card.appendChild(sessionRow);
     return card;
   });
@@ -345,9 +363,26 @@ function renderMovieCinemas() {
   void totalRows;
 }
 
+async function jumpToCinema(cinemaName, hallName) {
+  const list = await getJson(`/api/cinemas?q=${encodeURIComponent(cinemaName)}`);
+  const cinema = list.find((c) => c.name === cinemaName) || list[0];
+  if (!cinema) return;
+  setMode("cinemas");
+  state.district = "";
+  state.special = "";
+  state.search = "";
+  els.search.value = "";
+  state.selectedId = cinema.id;
+  await Promise.all([loadFilters(), loadCinemas()]);
+  await loadDetail(cinema.id, { highlightHall: hallName });
+}
+
 async function selectMovie(movieId) {
   const requestId = ++movieState.requestId;
   movieState.movieId = movieId;
+  els.movieChips.querySelectorAll(".chip").forEach((b) => {
+    b.classList.toggle("active", b.dataset.value === movieId);
+  });
   const data = await getJson(`/api/showtimes?movie=${movieId}`);
   if (requestId !== movieState.requestId) return;
   movieState.data = data;
