@@ -7,16 +7,19 @@
   <style>
 :root {
   color-scheme: light;
-  --bg: #f7f8f3;
+  --bg: #f5f6f8;
   --panel: #ffffff;
   --ink: #202124;
   --muted: #667085;
-  --line: #d8ded3;
+  --line: #d8dee8;
   --accent: #146b5f;
   --accent-soft: #e5f3ef;
   --gold: #a76d1b;
   --blue: #2f5fa7;
   --red: #b64235;
+  --cyan: #0f7b8d;
+  --panel-soft: #f8fafc;
+  --shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
 }
 
 * {
@@ -28,16 +31,30 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex: 0 0 auto;
+  display: grid;
+  gap: 14px;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.topbar-main {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 24px;
-  padding: 22px 28px;
-  border-bottom: 1px solid var(--line);
-  background: #fff;
 }
 
 h1,
@@ -69,23 +86,76 @@ h2 {
   border-radius: 6px;
   padding: 0 12px;
   font-size: 15px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.overview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.overview-stats,
+.quick-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.overview-stats span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.overview-stats strong {
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.quick-filters {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quick-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-filter {
+  white-space: nowrap;
+  font-weight: 650;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 260px minmax(360px, 1fr) minmax(360px, 0.9fr);
+  flex: 1 1 auto;
+  grid-template-columns: 272px minmax(340px, 1fr) minmax(360px, 0.9fr);
   gap: 18px;
   padding: 18px;
-  min-height: calc(100vh - 91px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .filters,
 .results,
 .detail {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
 
-.filters section,
+.filters,
 .results,
 .detail {
   background: var(--panel);
@@ -96,11 +166,16 @@ h2 {
 .filters {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: auto;
 }
 
 .filters section {
   padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.filters section:last-child {
+  border-bottom: 0;
 }
 
 .chips {
@@ -113,15 +188,27 @@ h2 {
 .chip,
 button {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--panel);
   border-radius: 6px;
   min-height: 32px;
   padding: 6px 10px;
   cursor: pointer;
   color: var(--ink);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.chip.active {
+button:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip.active,
+.quick-filter.active {
   color: #fff;
   background: var(--accent);
   border-color: var(--accent);
@@ -149,21 +236,30 @@ button {
 
 .results {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .list-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px;
   border-bottom: 1px solid var(--line);
+  background: var(--panel);
 }
 
 .cinemas {
   display: grid;
+  align-content: start;
   gap: 10px;
   padding: 12px;
-  max-height: calc(100vh - 150px);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -172,13 +268,21 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
-  background: #fff;
+  background: var(--panel);
   cursor: pointer;
+  box-shadow: none;
+}
+
+.cinema:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
 }
 
 .cinema.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-soft) inset;
+  background: color-mix(in srgb, var(--accent-soft) 38%, var(--panel));
 }
 
 .cinema h3 {
@@ -195,10 +299,12 @@ button {
 
 .badge {
   border-radius: 5px;
-  padding: 3px 6px;
+  padding: 3px 7px;
   font-size: 12px;
+  line-height: 1.35;
   background: #eef1f4;
   color: #344054;
+  font-weight: 650;
 }
 
 .badge.seed {
@@ -216,10 +322,33 @@ button {
   color: var(--red);
 }
 
+.badge.laser,
+.quick-filter.laser:not(.active) {
+  background: #fff5da;
+  color: var(--gold);
+}
+
+.badge.cinity,
+.quick-filter.cinity:not(.active) {
+  background: #ddf7fb;
+  color: var(--cyan);
+}
+
+.quick-filter.imax:not(.active) {
+  background: #e7eefb;
+  color: var(--blue);
+}
+
+.quick-filter.dolby:not(.active) {
+  background: #fde8e5;
+  color: var(--red);
+}
+
 .detail {
+  display: flex;
+  flex-direction: column;
   padding: 16px;
   overflow: auto;
-  max-height: calc(100vh - 127px);
 }
 
 .empty {
@@ -229,12 +358,16 @@ button {
 }
 
 .detail-head {
+  position: sticky;
+  top: -16px;
+  z-index: 4;
   display: flex;
   align-items: start;
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
+  background: var(--panel);
 }
 
 .detail-head h2 {
@@ -246,6 +379,7 @@ button {
   white-space: nowrap;
   color: var(--muted);
   font-size: 13px;
+  opacity: 0.72;
 }
 
 .halls {
@@ -257,7 +391,8 @@ button {
 .hall {
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px;
+  padding: 14px;
+  background: var(--panel);
 }
 
 .hall-title {
@@ -273,31 +408,87 @@ button {
 
 .spec-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  color: #344054;
+  color: var(--ink);
   font-size: 14px;
 }
 
+.spec-grid div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--panel-soft);
+}
+
 .spec-grid span {
+  display: block;
+  margin-bottom: 4px;
   color: var(--muted);
+  font-size: 12px;
+}
+
+.spec-grid strong {
+  display: block;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.hall > .meta {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.72;
+}
+
+.list-empty {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--panel-soft);
 }
 
 @media (max-width: 1040px) {
+  body {
+    overflow: auto;
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .layout {
     grid-template-columns: 220px 1fr;
+    overflow: visible;
   }
 
   .detail {
     grid-column: 1 / -1;
-    max-height: none;
+    max-height: 55dvh;
   }
 }
 
 @media (max-width: 720px) {
   .topbar {
-    display: grid;
     padding: 16px;
+  }
+
+  .topbar-main,
+  .overview-bar {
+    display: grid;
+    gap: 12px;
+  }
+
+  .overview-stats {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .overview-stats::-webkit-scrollbar {
+    display: none;
   }
 
   .search input {
@@ -307,10 +498,110 @@ button {
   .layout {
     grid-template-columns: 1fr;
     padding: 12px;
+    gap: 12px;
+  }
+
+  .filters {
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .filters section {
+    padding: 12px;
+  }
+
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    white-space: nowrap;
   }
 
   .cinemas {
+    max-height: 48dvh;
+  }
+
+  .detail {
     max-height: none;
+  }
+
+  .detail-head {
+    position: static;
+    display: grid;
+  }
+
+  #detailSource {
+    white-space: normal;
+  }
+
+  .spec-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  h1 {
+    font-size: 23px;
+  }
+
+  .spec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #111418;
+    --panel: #191d23;
+    --ink: #eef2f7;
+    --muted: #a1a9b5;
+    --line: #303741;
+    --accent: #32b6a2;
+    --accent-soft: #173f39;
+    --gold: #f2b84d;
+    --blue: #8fb8ff;
+    --red: #ff8f84;
+    --cyan: #5ed6e6;
+    --panel-soft: #20262e;
+    --shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .badge {
+    background: #27303a;
+    color: #d5dbe5;
+  }
+
+  .badge.seed {
+    background: #3b2c14;
+  }
+
+  .badge.imax,
+  .quick-filter.imax:not(.active) {
+    background: #182844;
+  }
+
+  .badge.dolby,
+  .quick-filter.dolby:not(.active) {
+    background: #3a1f21;
+  }
+
+  .badge.laser,
+  .quick-filter.laser:not(.active) {
+    background: #3a2b12;
+  }
+
+  .badge.cinity,
+  .quick-filter.cinity:not(.active) {
+    background: #12343b;
   }
 }
 
@@ -318,12 +609,22 @@ button {
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <h1>杭州特殊厅总览</h1>
-      <p id="meta">加载中...</p>
+    <div class="topbar-main">
+      <div>
+        <h1>杭州特殊厅总览</h1>
+        <p id="meta">加载中...</p>
+      </div>
+      <div class="search">
+        <input id="search" type="search" placeholder="搜索影院或地址">
+      </div>
     </div>
-    <div class="search">
-      <input id="search" type="search" placeholder="搜索影院或地址">
+    <div class="overview-bar" aria-label="数据总览">
+      <div class="overview-stats">
+        <span><strong id="totalCinemas">-</strong>影院</span>
+        <span><strong id="totalHalls">-</strong>影厅</span>
+        <span><strong id="totalDistricts">-</strong>区县</span>
+      </div>
+      <div id="quickFilters" class="quick-filters" aria-label="快捷特殊厅筛选"></div>
     </div>
   </header>
 
@@ -397,10 +698,24 @@ const state = {
   special: "",
   search: "",
   selectedId: null,
+  filtersLoaded: false,
+  cinemaRequestId: 0,
+  detailRequestId: 0,
+};
+
+const SPECIAL_GROUPS = {
+  IMAX: ["IMAX", "IMAX激光"],
+  杜比: ["杜比影院", "杜比巨幕", "杜比全景声"],
+  CINITY: ["CINITY"],
+  激光巨幕: ["激光巨幕", "中国巨幕", "杜比巨幕"],
 };
 
 const els = {
   meta: document.querySelector("#meta"),
+  totalCinemas: document.querySelector("#totalCinemas"),
+  totalHalls: document.querySelector("#totalHalls"),
+  totalDistricts: document.querySelector("#totalDistricts"),
+  quickFilters: document.querySelector("#quickFilters"),
   districts: document.querySelector("#districts"),
   specialTypes: document.querySelector("#specialTypes"),
   summary: document.querySelector("#summary"),
@@ -416,7 +731,6 @@ const els = {
   halls: document.querySelector("#halls"),
 };
 
-
 function chip(label, value, active, onClick) {
   const button = document.createElement("button");
   button.className = `chip${active ? " active" : ""}`;
@@ -426,12 +740,46 @@ function chip(label, value, active, onClick) {
   return button;
 }
 
+function specialClassName(text) {
+  const lower = String(text).toLowerCase();
+  if (lower.includes("seed")) return "seed";
+  if (lower.includes("imax")) return "imax";
+  if (text.includes("杜比")) return "dolby";
+  if (lower.includes("cinity")) return "cinity";
+  if (text.includes("激光") || text.includes("中国巨幕")) return "laser";
+  return "";
+}
+
 function badge(text) {
   const span = document.createElement("span");
-  const lower = text.toLowerCase();
-  span.className = `badge${text.includes("seed") ? " seed" : ""}${lower.includes("imax") ? " imax" : ""}${text.includes("杜比") ? " dolby" : ""}`;
+  const typeClass = specialClassName(text);
+  span.className = `badge${typeClass ? ` ${typeClass}` : ""}`;
   span.textContent = text;
   return span;
+}
+
+function specialMatches(specialTypes, selected) {
+  if (!selected) return true;
+  const types = (specialTypes || "").split(",").filter(Boolean);
+  const group = SPECIAL_GROUPS[selected];
+  if (group) return group.some((type) => types.includes(type));
+  return types.includes(selected);
+}
+
+function setSpecial(value) {
+  state.special = state.special === value ? "" : value;
+  refresh().catch(handleError);
+}
+
+function showEmptyDetail(message = "选择一家影院查看逐厅配置") {
+  state.detailRequestId += 1;
+  els.detailContent.hidden = true;
+  els.detailEmpty.hidden = false;
+  els.detailEmpty.textContent = message;
+}
+
+function handleError(error) {
+  els.meta.textContent = `加载失败：${error.message}`;
 }
 
 async function loadFilters() {
@@ -441,25 +789,43 @@ async function loadFilters() {
     getJson("/api/summary"),
   ]);
 
+  const totalCinemas = districts.reduce((sum, item) => sum + item.cinema_count, 0);
+  const totalHalls = specialTypes.reduce((sum, item) => sum + item.hall_count, 0);
+  els.totalCinemas.textContent = totalCinemas;
+  els.totalHalls.textContent = totalHalls;
+  els.totalDistricts.textContent = districts.length;
+
+  const quickButtons = Object.keys(SPECIAL_GROUPS).map((name) => {
+    const button = document.createElement("button");
+    const active = state.special === name;
+    const items = summary[name] || [];
+    const cinemaCount = new Set(items.map((item) => item.name)).size;
+    const typeClass = specialClassName(name);
+    button.type = "button";
+    button.className = `quick-filter${active ? " active" : ""}${typeClass ? ` ${typeClass}` : ""}`;
+    button.textContent = `${name} ${cinemaCount}`;
+    button.addEventListener("click", () => setSpecial(name));
+    return button;
+  });
+  els.quickFilters.replaceChildren(...quickButtons);
+
   els.districts.replaceChildren(
     chip("全部", "", !state.district, (value) => {
       state.district = value;
-      refresh();
+      refresh().catch(handleError);
     }),
     ...districts.map((item) => chip(`${item.district} ${item.cinema_count}`, item.district, state.district === item.district, (value) => {
       state.district = value;
-      refresh();
+      refresh().catch(handleError);
     })),
   );
 
   els.specialTypes.replaceChildren(
     chip("全部", "", !state.special, (value) => {
-      state.special = value;
-      refresh();
+      setSpecial(value);
     }),
     ...specialTypes.map((item) => chip(`${item.special_type} ${item.hall_count}`, item.special_type, state.special === item.special_type, (value) => {
-      state.special = value;
-      refresh();
+      setSpecial(value);
     })),
   );
 
@@ -471,16 +837,26 @@ async function loadFilters() {
     return row;
   });
   els.summary.replaceChildren(...rows);
+  state.filtersLoaded = true;
 }
 
 async function loadCinemas() {
+  const requestId = ++state.cinemaRequestId;
   const params = new URLSearchParams();
   if (state.district) params.set("district", state.district);
-  if (state.special) params.set("special", state.special);
+  if (state.special && !SPECIAL_GROUPS[state.special]) params.set("special", state.special);
   if (state.search) params.set("q", state.search);
-  const cinemas = await getJson(`/api/cinemas?${params.toString()}`);
+  let cinemas = await getJson(`/api/cinemas?${params.toString()}`);
+  if (requestId !== state.cinemaRequestId) return;
+  if (SPECIAL_GROUPS[state.special]) {
+    cinemas = cinemas.filter((item) => specialMatches(item.special_types, state.special));
+  }
+
   els.count.textContent = `${cinemas.length} 家影院`;
-  els.meta.textContent = `覆盖杭州 ${new Set(cinemas.map((item) => item.district)).size || 13} 个区县；点击影院查看逐厅幕布、音效和座位信息`;
+  const visibleDistricts = new Set(cinemas.map((item) => item.district)).size;
+  els.meta.textContent = cinemas.length
+    ? `当前结果覆盖 ${visibleDistricts} 个区县；点击影院查看逐厅幕布、音效和座位信息`
+    : "当前筛选没有匹配影院，请调整区县、特殊厅或搜索词";
 
   const cards = cinemas.map((item) => {
     const card = document.createElement("button");
@@ -501,21 +877,34 @@ async function loadCinemas() {
     card.appendChild(badges);
     card.addEventListener("click", () => {
       state.selectedId = item.id;
-      loadDetail(item.id);
+      loadDetail(item.id, { scrollIntoView: true }).catch(handleError);
       document.querySelectorAll(".cinema").forEach((node) => node.classList.remove("active"));
       card.classList.add("active");
     });
     return card;
   });
+
+  if (!cinemas.length) {
+    const empty = document.createElement("div");
+    empty.className = "list-empty";
+    empty.textContent = "没有找到匹配的影院";
+    els.cinemas.replaceChildren(empty);
+    state.selectedId = null;
+    showEmptyDetail("调整筛选后选择一家影院查看逐厅配置");
+    return;
+  }
+
   els.cinemas.replaceChildren(...cards);
-  if (cinemas.length && !state.selectedId) {
+  if (!cinemas.some((item) => item.id === state.selectedId)) {
     state.selectedId = cinemas[0].id;
-    loadDetail(cinemas[0].id);
+    loadDetail(cinemas[0].id).catch(handleError);
   }
 }
 
-async function loadDetail(id) {
+async function loadDetail(id, options = {}) {
+  const requestId = ++state.detailRequestId;
   const payload = await getJson(`/api/cinemas/${id}`);
+  if (requestId !== state.detailRequestId || state.selectedId !== id) return;
   els.detailEmpty.hidden = true;
   els.detailContent.hidden = false;
   els.detailName.textContent = payload.cinema.name;
@@ -525,35 +914,39 @@ async function loadDetail(id) {
     const node = document.createElement("article");
     node.className = "hall";
     const size = hall.screen_width_m && hall.screen_height_m ? `${hall.screen_width_m} × ${hall.screen_height_m} m` : "待核验";
+    const hallBadgeText = hall.source === "special_seed" ? "精编 seed" : hall.special_type;
+    const hallBadgeClass = specialClassName(hallBadgeText);
     node.innerHTML = `
       <div class="hall-title">
         <strong>${hall.hall_name}</strong>
-        <span class="badge ${hall.source === "special_seed" ? "seed" : ""}">${hall.source === "special_seed" ? "精编 seed" : hall.special_type}</span>
+        <span class="badge ${hallBadgeClass}">${hallBadgeText}</span>
       </div>
       <div class="spec-grid">
-        <div><span>类型</span><br>${hall.special_type}</div>
-        <div><span>银幕</span><br>${hall.screen_type}</div>
-        <div><span>尺寸</span><br>${size}</div>
-        <div><span>音效</span><br>${hall.sound || "待核验"}</div>
-        <div><span>座位</span><br>${hall.seats || "待核验"}</div>
-        <div><span>能力</span><br>${hall.features || "待核验"}</div>
+        <div><span>类型</span><strong>${hall.special_type}</strong></div>
+        <div><span>银幕</span><strong>${hall.screen_type}</strong></div>
+        <div><span>尺寸</span><strong>${size}</strong></div>
+        <div><span>音效</span><strong>${hall.sound || "待核验"}</strong></div>
+        <div><span>座位</span><strong>${hall.seats || "待核验"}</strong></div>
+        <div><span>能力</span><strong>${hall.features || "待核验"}</strong></div>
       </div>
       <p class="meta">来源：${hall.source_detail}</p>
     `;
     return node;
   });
   els.halls.replaceChildren(...halls);
+  if (options.scrollIntoView && window.matchMedia("(max-width: 720px)").matches) {
+    els.detailContent.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
-function refresh() {
+async function refresh() {
   state.selectedId = null;
-  loadFilters();
-  loadCinemas();
+  await Promise.all([loadFilters(), loadCinemas()]);
 }
 
 els.search.addEventListener("input", () => {
   state.search = els.search.value.trim();
-  loadCinemas();
+  loadCinemas().catch(handleError);
 });
 
 els.reset.addEventListener("click", () => {
@@ -561,12 +954,10 @@ els.reset.addEventListener("click", () => {
   state.special = "";
   state.search = "";
   els.search.value = "";
-  refresh();
+  refresh().catch(handleError);
 });
 
-refresh().catch((error) => {
-  els.meta.textContent = `加载失败：${error.message}`;
-});
+refresh().catch(handleError);
 
 </script>
 </body>
