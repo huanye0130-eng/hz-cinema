@@ -416,11 +416,6 @@ const els = {
   halls: document.querySelector("#halls"),
 };
 
-async function getJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.json();
-}
 
 function chip(label, value, active, onClick) {
   const button = document.createElement("button");
