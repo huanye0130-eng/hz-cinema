@@ -94,7 +94,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
 }
 
 .overview-stats,
@@ -103,6 +103,10 @@ h2 {
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+.overview-stats {
+  flex: 0 0 auto;
 }
 
 .overview-stats span {
@@ -124,6 +128,7 @@ h2 {
 }
 
 .quick-filters {
+  flex: 0 1 auto;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -255,6 +260,7 @@ input:focus-visible {
 
 .cinemas {
   display: grid;
+  grid-auto-rows: max-content;
   align-content: start;
   gap: 10px;
   padding: 12px;
@@ -361,13 +367,15 @@ input:focus-visible {
   position: sticky;
   top: -16px;
   z-index: 4;
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  gap: 8px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
+}
+
+.detail-head > div {
+  min-width: 0;
 }
 
 .detail-head h2 {
@@ -376,9 +384,10 @@ input:focus-visible {
 }
 
 #detailSource {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.35;
   opacity: 0.72;
 }
 
@@ -471,6 +480,18 @@ input:focus-visible {
   }
 }
 
+@media (max-width: 900px) {
+  .overview-bar {
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .quick-filters {
+    flex: 1 1 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .topbar {
     padding: 16px;
@@ -535,11 +556,6 @@ input:focus-visible {
 
   .detail-head {
     position: static;
-    display: grid;
-  }
-
-  #detailSource {
-    white-space: normal;
   }
 
   .spec-grid {
