@@ -37,6 +37,14 @@ body {
   flex-direction: column;
 }
 
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -651,7 +659,7 @@ input:focus-visible {
   grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
   gap: 18px;
   padding: 18px;
-  height: calc(100dvh - 220px);
+  flex: 1 1 auto;
   min-height: 0;
 }
 
