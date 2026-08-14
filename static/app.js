@@ -44,6 +44,10 @@ const els = {
   movieCount: document.querySelector("#movieCount"),
   movieCinemas: document.querySelector("#movieCinemas"),
   specialOnly: document.querySelector("#specialOnly"),
+  specialHallChips: document.querySelector("#specialHallChips"),
+  timeRangeChips: document.querySelector("#timeRangeChips"),
+  timeFrom: document.querySelector("#timeFrom"),
+  timeTo: document.querySelector("#timeTo"),
 };
 
 function chip(label, value, active, onClick) {
@@ -283,9 +287,23 @@ const movieState = {
   date: "",
   data: null,
   specialOnly: false,
+  specialHall: "",
+  timePreset: "",
+  timeFrom: "",
+  timeTo: "",
   loaded: false,
   requestId: 0,
 };
+
+const HALL_PRIORITY = ["IMAX激光", "IMAX", "杜比影院", "CINITY", "激光巨幕", "中国巨幕", "杜比全景声", "LUXE", "4DX", "激光厅", "标准厅"];
+
+const TIME_PRESETS = [
+  { label: "全部", value: "" },
+  { label: "上午", value: "morning" },
+  { label: "下午", value: "afternoon" },
+  { label: "晚上", value: "evening" },
+  { label: "深夜", value: "late" },
+];
 
 function dateLabel(dateStr) {
   const d = new Date(`${dateStr}T00:00:00+08:00`);
@@ -318,26 +336,110 @@ function renderDateChips() {
     ...dates.map((d) =>
       chip(dateLabel(d), d, movieState.date === d, (value) => {
         movieState.date = value;
+        els.dateChips.querySelectorAll(".chip").forEach((b) => b.classList.toggle("active", b.dataset.value === value));
         renderMovieCinemas();
       })
     )
   );
 }
 
+function renderSpecialHallChips() {
+  const data = movieState.data;
+  if (!data) return;
+  const types = new Set();
+  data.cinemas.forEach((c) => {
+    Object.values(c.hs || {}).forEach((t) => t && types.add(t));
+    if (c.bt) types.add(c.bt);
+  });
+  const ordered = HALL_PRIORITY.filter((t) => types.has(t));
+  [...types]
+    .filter((t) => !HALL_PRIORITY.includes(t))
+    .sort()
+    .forEach((t) => ordered.push(t));
+  els.specialHallChips.replaceChildren(
+    chip("全部", "", !movieState.specialHall, (v) => {
+      movieState.specialHall = v;
+      renderSpecialHallChips();
+      renderMovieCinemas();
+    }),
+    ...ordered.map((t) =>
+      chip(t, t, movieState.specialHall === t, (v) => {
+        movieState.specialHall = v;
+        renderSpecialHallChips();
+        renderMovieCinemas();
+      })
+    )
+  );
+}
+
+function presetTimeOk(value, t) {
+  switch (value) {
+    case "morning": return t < "12:00";
+    case "afternoon": return t >= "12:00" && t < "18:00";
+    case "evening": return t >= "18:00";
+    case "late": return t < "06:00";
+    default: return true;
+  }
+}
+
+function sessionTimeOk(t) {
+  if (movieState.timePreset) return presetTimeOk(movieState.timePreset, t);
+  const f = movieState.timeFrom;
+  const to = movieState.timeTo;
+  if (!f && !to) return true;
+  if (f && to) {
+    if (f <= to) return t >= f && t < to;
+    return t >= f || t < to; // 跨天区间，如 22:00 - 01:00
+  }
+  if (f) return t >= f;
+  return t < to;
+}
+
+function renderTimeChips() {
+  els.timeRangeChips.replaceChildren(
+    ...TIME_PRESETS.map((p) =>
+      chip(p.label, p.value, movieState.timePreset === p.value && !movieState.timeFrom && !movieState.timeTo, (v) => {
+        movieState.timePreset = v;
+        if (v) {
+          movieState.timeFrom = "";
+          movieState.timeTo = "";
+          els.timeFrom.value = "";
+          els.timeTo.value = "";
+        }
+        renderTimeChips();
+        renderMovieCinemas();
+      })
+    )
+  );
+}
+
+function filteredSessions(c) {
+  const hs = c.hs || {};
+  return (c.s[movieState.date] || [])
+    .filter((s) => (!movieState.specialHall || hs[s[1]] === movieState.specialHall) && sessionTimeOk(s[0]))
+    .slice()
+    .sort((a, b) => (a[0] || "").localeCompare(b[0] || ""));
+}
+
 function renderMovieCinemas() {
   const data = movieState.data;
   if (!data || !movieState.date) return;
-  let rows = data.cinemas.filter((c) => c.s[movieState.date]);
-  const totalRows = rows.length;
+  let rows = data.cinemas.filter((c) => filteredSessions(c).length > 0);
   if (movieState.specialOnly) {
     rows = rows.filter((c) => c.r <= 9);
   }
-  els.movieCount.textContent = `${rows.length} 家影院${movieState.specialOnly ? "（仅特殊厅）" : ""} · ${dateLabel(movieState.date)}`;
+  const cond = [
+    movieState.specialOnly ? "仅特殊厅" : "",
+    movieState.specialHall,
+    movieState.timePreset ? TIME_PRESETS.find((p) => p.value === movieState.timePreset).label : "",
+    !movieState.timePreset && (movieState.timeFrom || movieState.timeTo) ? `${movieState.timeFrom || "00:00"}-${movieState.timeTo || "24:00"}` : "",
+  ].filter(Boolean).join(" · ");
+  els.movieCount.textContent = `${rows.length} 家影院${cond ? " · " + cond : ""} · ${dateLabel(movieState.date)}`;
 
   if (!rows.length) {
     const empty = document.createElement("div");
     empty.className = "list-empty";
-    empty.textContent = "该日期暂无排片";
+    empty.textContent = "该筛选条件下暂无场次";
     els.movieCinemas.replaceChildren(empty);
     return;
   }
@@ -345,7 +447,7 @@ function renderMovieCinemas() {
   const cards = rows.map((c) => {
     const card = document.createElement("article");
     card.className = "movie-cinema";
-    const sessions = c.s[movieState.date].slice().sort((a, b) => (a[0] || "").localeCompare(b[0] || ""));
+    const sessions = filteredSessions(c);
     const badges = [];
     if (c.r <= 9 && c.bt) badges.push(`<span class="badge ${specialClassName(c.bt)}">${c.bt}</span>`);
     card.innerHTML = `
@@ -360,7 +462,6 @@ function renderMovieCinemas() {
     return card;
   });
   els.movieCinemas.replaceChildren(...cards);
-  void totalRows;
 }
 
 async function jumpToCinema(cinemaName, hallName) {
@@ -407,6 +508,8 @@ async function selectMovie(movieId) {
   const todayStr = new Date().toISOString().slice(0, 10);
   movieState.date = (data.dates || []).find((d) => d >= todayStr) || (data.dates || [])[data.dates.length - 1] || "";
   renderDateChips();
+  renderSpecialHallChips();
+  renderTimeChips();
   renderMovieCinemas();
 }
 
@@ -443,6 +546,20 @@ els.modeMovies.addEventListener("click", () => setMode("movies"));
 els.specialOnly.addEventListener("click", () => {
   movieState.specialOnly = !movieState.specialOnly;
   els.specialOnly.classList.toggle("active", movieState.specialOnly);
+  renderMovieCinemas();
+});
+
+els.timeFrom.addEventListener("input", () => {
+  movieState.timeFrom = els.timeFrom.value;
+  movieState.timePreset = "";
+  renderTimeChips();
+  renderMovieCinemas();
+});
+
+els.timeTo.addEventListener("input", () => {
+  movieState.timeTo = els.timeTo.value;
+  movieState.timePreset = "";
+  renderTimeChips();
   renderMovieCinemas();
 });
 

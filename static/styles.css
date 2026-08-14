@@ -678,6 +678,30 @@ input:focus-visible {
   margin-bottom: 10px;
 }
 
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.time-inputs input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 14px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.time-sep {
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
 .movie-chips {
   display: flex;
   flex-direction: column;
