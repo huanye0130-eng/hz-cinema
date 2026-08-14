@@ -364,17 +364,35 @@ function renderMovieCinemas() {
 }
 
 async function jumpToCinema(cinemaName, hallName) {
-  const list = await getJson(`/api/cinemas?q=${encodeURIComponent(cinemaName)}`);
-  const cinema = list.find((c) => c.name === cinemaName) || list[0];
-  if (!cinema) return;
+  const list = await getJson("/api/cinemas");
+  const norm = (s) => (s || "").replace(/[\s（）()·]/g, "");
+  const target = norm(cinemaName);
+  const cinema =
+    list.find((c) => norm(c.name) === target) ||
+    list.find((c) => {
+      const a = norm(c.name);
+      return a && target && (a.includes(target) || target.includes(a));
+    }) ||
+    null;
+
   setMode("cinemas");
   state.district = "";
   state.special = "";
   state.search = "";
   els.search.value = "";
+
+  if (!cinema) {
+    // 排片里有但影院配置数据里没有：搜不到就退化为按名字搜索
+    state.search = cinemaName;
+    els.search.value = cinemaName;
+    await Promise.all([loadFilters(), loadCinemas()]);
+    showEmptyDetail(`未找到「${cinemaName}」的逐厅数据，已为你按名称搜索`);
+    return;
+  }
+
   state.selectedId = cinema.id;
   await Promise.all([loadFilters(), loadCinemas()]);
-  await loadDetail(cinema.id, { highlightHall: hallName });
+  await loadDetail(cinema.id, { highlightHall: hallName, scrollIntoView: true });
 }
 
 async function selectMovie(movieId) {

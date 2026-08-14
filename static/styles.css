@@ -19,13 +19,15 @@
   box-sizing: border-box;
 }
 
+/* 滚动架构：body/main 永不锁滚动，任何设备最坏情况都是整页自然滚动；
+   桌面 app-shell 面板内滚通过 max-height 实现，失效时自动退化为整页滚动 */
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -34,8 +36,6 @@ main {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .topbar {
@@ -150,7 +150,6 @@ h2 {
   gap: 18px;
   padding: 18px;
   min-height: 0;
-  overflow: hidden;
 }
 
 .filters,
@@ -158,7 +157,6 @@ h2 {
 .detail {
   min-width: 0;
   min-height: 0;
-  height: 100%;
 }
 
 .filters,
@@ -463,13 +461,20 @@ input:focus-visible {
   background: var(--panel-soft);
 }
 
-@media (max-width: 1040px) {
-  body {
-    overflow: auto;
-    height: auto;
-    min-height: 100dvh;
+@media (min-width: 1041px) {
+  /* 桌面 app-shell：面板限高内部滚动；max-height 失效时整页滚动兜底 */
+  .layout {
+    align-items: stretch;
   }
 
+  .filters,
+  .results,
+  .detail {
+    max-height: calc(100vh - 200px);
+  }
+}
+
+@media (max-width: 1040px) {
   .layout {
     grid-template-columns: 220px 1fr;
     overflow: visible;
@@ -477,7 +482,7 @@ input:focus-visible {
 
   .detail {
     grid-column: 1 / -1;
-    max-height: 55dvh;
+    max-height: none;
   }
 }
 
@@ -548,7 +553,8 @@ input:focus-visible {
   }
 
   .cinemas {
-    max-height: 48dvh;
+    max-height: none;
+    overflow: visible;
   }
 
   .detail {
@@ -836,11 +842,18 @@ input:focus-visible {
   .tg.laser { background: #3a2b12; color: var(--gold); }
 }
 
+@media (min-width: 1041px) {
+  .movie-controls,
+  .movie-results {
+    max-height: calc(100vh - 200px);
+  }
+}
+
 @media (max-width: 900px) {
   .movie-view {
     grid-template-columns: 1fr;
     height: auto;
-    overflow: auto;
+    overflow: visible;
   }
 
   .movie-chips {
